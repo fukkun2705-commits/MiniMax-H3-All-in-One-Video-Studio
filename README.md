@@ -91,7 +91,7 @@ GitHubのファイル一覧からJSONを開き、右上のダウンロード機�
 
 ## 3. 必須カスタムノード / Required Custom Nodes
 
-### ComfyUI Managerからインストール
+### ① ComfyUI Managerからインストール
 
 **ComfyUI-KJNodes**
 
@@ -99,75 +99,95 @@ Repository: [kijai/ComfyUI-KJNodes](https://github.com/kijai/ComfyUI-KJNodes)
 
 Set/GetノードやAttention関連の処理に使用します。
 
-**NVIDIA RTX Nodes**
+### ② Git cloneで手動インストール
 
-Repository: [Comfy-Org/Nvidia_RTX_Nodes_ComfyUI](https://github.com/Comfy-Org/Nvidia_RTX_Nodes_ComfyUI)
+### Windows / venv環境での準備（最初に1回だけ）
 
-RTX Video Super Resolutionによる動画アップスケールに使用します。
+**ComfyUI本体のフォルダ**でコマンドプロンプトを開き、以下を順番に実行します。
 
-### Git cloneでインストール
+```bat
+venv\Scripts\activate
+cd custom_nodes
+```
 
-以下のカスタムノードを `ComfyUI/custom_nodes` にインストールします。Git cloneのコマンドは、**`ComfyUI/custom_nodes` をカレントフォルダにした状態**で実行します。
+以降の `git clone` と依存パッケージのインストールコマンドは、**すべて `custom_nodes` フォルダで実行**してください。各コマンドの後も同じ場所から続けられます。
 
-**① MiniMax H3 Integrated Custom Nodes**
+- `git clone` 自体にvenvは不要ですが、先に有効化しても問題ありません。
+- `python -m pip` は、必ずComfyUIが実際に使用するPython環境で実行してください。
+- ComfyUI Portable版などvenvを使用しない環境では、上記の有効化コマンドを使わず、その環境のPythonで依存パッケージをインストールしてください。
 
-Repository: [ComfyUI-MiniMax-H3-Integrated](https://github.com/fukkun2705-commits/ComfyUI-MiniMax-H3-Integrated)
+#### ComfyUI_Nvidia_VFX_Nodes
 
-```bash
+Repository: [Comfy-Org/ComfyUI_Nvidia_VFX_Nodes](https://github.com/Comfy-Org/ComfyUI_Nvidia_VFX_Nodes)
+
+```bat
+git clone https://github.com/Comfy-Org/ComfyUI_Nvidia_VFX_Nodes.git
+python -m pip install -r ComfyUI_Nvidia_VFX_Nodes\requirements.txt
+```
+
+RTX Video Super Resolutionによる動画のアップスケールに使用します。NVIDIA RTX GPUが必要です。現在ComfyUI Managerでインストールエラーが発生するため、手動で導入します。
+
+#### ComfyUI-MiniMax-H3-Integrated
+
+Repository: [fukkun2705-commits/ComfyUI-MiniMax-H3-Integrated](https://github.com/fukkun2705-commits/ComfyUI-MiniMax-H3-Integrated)
+
+```bat
 git clone https://github.com/fukkun2705-commits/ComfyUI-MiniMax-H3-Integrated.git
+python -m pip install -r ComfyUI-MiniMax-H3-Integrated\requirements.txt
 ```
 
-依存パッケージ：
+本ワークフロー専用の統合カスタムノードです。
 
-```bash
-python -m pip install -r ComfyUI-MiniMax-H3-Integrated/requirements.txt
-```
+#### ComfyUI-H3-Motion-Context-MultiRef
 
-**② Motion Context MultiRef**
+Repository: [seitanism/ComfyUI-H3-Motion-Context-MultiRef](https://github.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef)
 
-Repository: [ComfyUI-H3-Motion-Context-MultiRef](https://github.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef)
-
-```bash
+```bat
 git clone https://github.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef.git
 ```
 
-**③ Face Refine**
+Clip間・Part間で映像と音声のMotion Contextを引き継ぎます。
 
-Repository: [ComfyUI-H3-FaceRefine](https://github.com/Carasibana/ComfyUI-H3-FaceRefine)
+#### ComfyUI-H3-FaceRefine
 
-```bash
+Repository: [Carasibana/ComfyUI-H3-FaceRefine](https://github.com/Carasibana/ComfyUI-H3-FaceRefine)
+
+```bat
 git clone https://github.com/Carasibana/ComfyUI-H3-FaceRefine.git
+python -m pip install -r ComfyUI-H3-FaceRefine\requirements.txt
 ```
 
-依存パッケージ：
+遠景などで小さく映った人物の顔を補正します。FaceAutoBypassは統合カスタムノードに含まれるため、個別インストールは不要です。
 
-```bash
-python -m pip install -r ComfyUI-H3-FaceRefine/requirements.txt
-```
+#### Comfyui_Minimax_h3_latent_Upscaler
 
-**④ MiniMax H3 Latent Upscaler**
+Repository: [LBH-123-AI/Comfyui_Minimax_h3_latent_Upscaler](https://github.com/LBH-123-AI/Comfyui_Minimax_h3_latent_Upscaler)
 
-Repository: [Comfyui_Minimax_h3_latent_Upscaler](https://github.com/LBH-123-AI/Comfyui_Minimax_h3_latent_Upscaler)
-
-```bash
+```bat
 git clone https://github.com/LBH-123-AI/Comfyui_Minimax_h3_latent_Upscaler.git
 ```
 
-**⑤ Audio Refine**
+Video Latentをアップスケールし、Pass2でRefineします。
 
-Repository: [ComfyUI-H3-AudioRefine](https://github.com/Adudeguyman/ComfyUI-H3-AudioRefine)
+Latent Upscaler用モデル：`minimax_h3_latent_upscaler_3d_conv_v1_fp16.safetensors`
 
-映像を維持したまま音声に追加のRefine処理を行います。
+配置先：`ComfyUI/models/latent_upscale_models/`（共有Models環境では実際の検索パスに合わせてください）。
 
-```bash
+#### ComfyUI-H3-AudioRefine
+
+Repository: [Adudeguyman/ComfyUI-H3-AudioRefine](https://github.com/Adudeguyman/ComfyUI-H3-AudioRefine)
+
+```bat
 git clone https://github.com/Adudeguyman/ComfyUI-H3-AudioRefine.git
 ```
 
-※ コマンドは `ComfyUI/custom_nodes` フォルダで実行してください。依存パッケージは、ComfyUIが使用するPython環境へインストールしてください。
+映像を維持しながら、音声のみ追加のRefine処理を行います。
 
-各カスタムノードの詳細な導入方法は、それぞれのRepositoryを参照してください。
+### ③ インストール後の確認
 
-**インストール後はComfyUIを再起動**し、起動ログに `IMPORT FAILED` がないことを確認してください。
+全カスタムノードの導入後、ComfyUIを再起動してください。起動ログの `IMPORT FAILED` とワークフロー読み込み時の `Missing Node` がないことを確認します。
+
+※ 依存パッケージがすでに導入されている場合、`Requirement already satisfied` は正常な表示です。
 
 ---
 
@@ -465,7 +485,7 @@ MiniMax H3 Pass1（映像＋音声）
 
 - [ComfyUI](https://github.com/Comfy-Org/ComfyUI)
 - [ComfyUI-KJNodes](https://github.com/kijai/ComfyUI-KJNodes)
-- [NVIDIA RTX Nodes](https://github.com/Comfy-Org/Nvidia_RTX_Nodes_ComfyUI)
+- [ComfyUI_Nvidia_VFX_Nodes](https://github.com/Comfy-Org/ComfyUI_Nvidia_VFX_Nodes)
 - [ComfyUI-H3-Motion-Context-MultiRef](https://github.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef)
 - [ComfyUI-H3-FaceRefine](https://github.com/Carasibana/ComfyUI-H3-FaceRefine)
 - [MiniMax H3 Latent Upscaler](https://github.com/LBH-123-AI/Comfyui_Minimax_h3_latent_Upscaler)
