@@ -246,6 +246,19 @@ Conditioningはワークフロー内部で自動切替されます。
 ---
 
 ## 6. 基本操作 / How to Use
+### H3 Scene Editorの起動方法
+
+ComfyUIを起動した状態で、Webブラウザから以下のURLにアクセスしてください。
+
+**H3 Scene Editor：**
+
+http://127.0.0.1:8188/h3-scene-editor
+
+H3 Scene Editorでは、生成方式（REF2VA / T2VA / I2V / FLF2VA）の選択、各Clipの動画尺、参照画像、プロンプトを設定できます。
+
+設定後は、必ず **「全Clipを保存」** を押してからComfyUIで動画生成を実行してください。
+
+※ `8188` はComfyUIの標準的なポート番号です。異なるポートで起動している場合は、URLのポート番号を変更してください。
 
 ### Part1 — NEW
 
