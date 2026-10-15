@@ -2,7 +2,7 @@
 
 ### All-in-One ComfyUI Workflow for MiniMax H3
 
-**REF2VA / T2VA / I2V / FLF2VA | 7-Clip Generation | Part Continuation | Face Refine | Latent Upscale**
+**REF2VA / T2VA / I2V / FLF2VA | 7-Clip Generation | Part Continuation | Face Refine | Latent Upscale | Audio Refine**
 
 MiniMax H3の4つの動画生成方式を統合した、ComfyUI用オールインワン・ワークフローです。
 
@@ -47,6 +47,11 @@ MiniMax H3の4つの動画生成方式を統合した、ComfyUI用オールイ�
   - Pass2で追加Refine
   - 共通管理パネルによる倍率・Steps・Denoise調整
 
+- **Audio Refine**
+  - 生成済みのVideo Latentを維持し、Audio Latentに追加のRefine処理
+  - 高速生成時の音声ノイズや不自然さの改善を目指す
+  - ステップ数とAudio Denoiseで処理を調整
+
 - **Audio Alignment**
   - Clip間の音声長を調整
   - 映像・音声の同期を維持するための補正処理
@@ -61,6 +66,8 @@ MiniMax H3の4つの動画生成方式を統合した、ComfyUI用オールイ�
 - 必要なMiniMax H3モデルとカスタムノード
 
 本ワークフローは、**RTX 3060 12GB / システムRAM 64GB** の環境で開発・検証しています。
+
+**インストールから初回生成までの流れ：** 必須カスタムノード導入 → 必要モデル配置 → ワークフローJSON読み込み → H3 Scene Editor設定 → Part1（NEW）で生成。
 
 生成速度や使用可能な解像度は、GPU・VRAM・モデル・設定によって異なります。
 
@@ -77,6 +84,8 @@ MiniMax H3の4つの動画生成方式を統合した、ComfyUI用オールイ�
 GitHubのファイル一覧からJSONを開き、右上のダウンロード機能を使用してください。
 
 ダウンロードしたJSONをComfyUIの画面へドラッグ＆ドロップすると、ワークフローを読み込めます。
+
+**初回の確認：** ワークフロー読み込み時にMissing Nodeが出る場合は、以下の必須カスタムノードのインストールとComfyUI再起動を確認してください。
 
 ---
 
@@ -98,7 +107,7 @@ RTX Video Super Resolutionによる動画アップスケールに使用します
 
 ### Git cloneでインストール
 
-以下のカスタムノードを `ComfyUI/custom_nodes` にインストールします。
+以下のカスタムノードを `ComfyUI/custom_nodes` にインストールします。Git cloneのコマンドは、**`ComfyUI/custom_nodes` をカレントフォルダにした状態**で実行します。
 
 **① MiniMax H3 Integrated Custom Nodes**
 
@@ -144,9 +153,21 @@ Repository: [Comfyui_Minimax_h3_latent_Upscaler](https://github.com/LBH-123-AI/C
 git clone https://github.com/LBH-123-AI/Comfyui_Minimax_h3_latent_Upscaler.git
 ```
 
+**⑤ Audio Refine**
+
+Repository: [ComfyUI-H3-AudioRefine](https://github.com/Adudeguyman/ComfyUI-H3-AudioRefine)
+
+映像を維持したまま音声に追加のRefine処理を行います。
+
+```bash
+git clone https://github.com/Adudeguyman/ComfyUI-H3-AudioRefine.git
+```
+
 ※ コマンドは `ComfyUI/custom_nodes` フォルダで実行してください。依存パッケージは、ComfyUIが使用するPython環境へインストールしてください。
 
 各カスタムノードの詳細な導入方法は、それぞれのRepositoryを参照してください。
+
+**インストール後はComfyUIを再起動**し、起動ログに `IMPORT FAILED` がないことを確認してください。
 
 ---
 
@@ -258,9 +279,9 @@ H3 Scene Editorでは、生成方式（REF2VA / T2VA / I2V / FLF2VA）の選択�
 
 設定後は、必ず **「全Clipを保存」** を押してからComfyUIで動画生成を実行してください。
 
-※ `8188` はComfyUIの標準的なポート番号です。異なるポートで起動している場合は、URLのポート番号を変更してください。
+※ `8188` はComfyUIの標準的なポート番号です。異なるポートで起動している場合は、URLのポート番号を変更してください。Scene Editorが表示されない場合は、統合カスタムノードの導入とComfyUIの起動ログを確認してください。
 
-### Part1 — NEW
+### Part1 — NEW（最初のPart）
 
 **H3 Scene Editor**
 
@@ -274,8 +295,10 @@ H3 Scene Editorでは、生成方式（REF2VA / T2VA / I2V / FLF2VA）の選択�
 1. `Resolution Selector (Size)` でアスペクト比と解像度を設定します。`multiple` は通常32を使用します。
 2. `Part Mode` を **NEW** に設定します。
 3. `Use Clip Total` で使用するClip数（1～7）を指定します。
-4. 動画生成を実行します。
-5. 完成MP4とNative AV Latentの保存を確認します。
+4. モデルの選択・参照画像の指定が正しいことを確認し、動画生成を実行します。
+5. 完成MP4とNative AV Latentが保存されたことを確認します。
+
+**最初は1Clipの短い動画で動作確認するのがおすすめです。** 問題がなければ2Clip以上に増やしてください。
 
 ### Part2 — CONTINUE
 
@@ -294,7 +317,7 @@ H3 Scene Editorでは、生成方式（REF2VA / T2VA / I2V / FLF2VA）の選択�
 
 ### Part3以降 — CONTINUE
 
-Part2と同じ操作を繰り返します。
+Part2と同じ操作を繰り返します。**解像度はPart1と同じ設定を引き継ぎます。**
 
 MP4 Tailには**直前のPartの完成MP4**を指定してください。
 
@@ -395,7 +418,35 @@ Pass2 Sampler              = euler
 
 ---
 
-## 10. 注意事項 / Notes
+## 10. Audio Refine
+
+Audio Refineは、MiniMax H3で生成した**映像を維持しながら、音声だけに追加のRefine処理**を行う機能です。
+
+4Step Turboなどの高速生成で、映像は十分な品質でも音声にノイズや不自然さが残る場合に、追加の音声生成ステップで改善を図ります。
+
+### 処理の流れ
+
+```text
+MiniMax H3 Pass1（映像＋音声）
+          ↓
+      Audio Refine
+      ├─ Video：維持
+      └─ Audio：追加Refine
+          ↓
+       VAE Decode
+```
+
+- `Steps`：音声側に追加するRefineステップ数
+- `Audio Denoise`：音声を再生成する強度。値を上げるほど変化が大きくなります
+- 映像と音声の長さ・同期を調整する **Audio Alignment** とは別の機能です
+
+追加処理には生成時間がかかり、結果はプロンプトやモデルの設定によって変化します。
+
+詳しいノード仕様：[ComfyUI-H3-AudioRefine](https://github.com/Adudeguyman/ComfyUI-H3-AudioRefine)
+
+---
+
+## 11. 注意事項 / Notes
 
 - ComfyUIと必要なカスタムノードを導入してからワークフローを読み込んでください。
 - JSON内で指定されているモデル名やファイルパスは、使用環境に合わせて変更してください。
@@ -408,7 +459,7 @@ Pass2 Sampler              = euler
 
 ---
 
-## 11. Credits / Acknowledgements
+## 12. Credits / Acknowledgements
 
 このワークフローはComfyUIと、以下の外部カスタムノードを利用しています。
 
@@ -418,6 +469,7 @@ Pass2 Sampler              = euler
 - [ComfyUI-H3-Motion-Context-MultiRef](https://github.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef)
 - [ComfyUI-H3-FaceRefine](https://github.com/Carasibana/ComfyUI-H3-FaceRefine)
 - [MiniMax H3 Latent Upscaler](https://github.com/LBH-123-AI/Comfyui_Minimax_h3_latent_Upscaler)
+- [ComfyUI-H3-AudioRefine](https://github.com/Adudeguyman/ComfyUI-H3-AudioRefine)
 
 ワークフロー専用の統合カスタムノード：
 
