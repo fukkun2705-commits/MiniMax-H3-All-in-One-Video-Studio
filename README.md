@@ -2,7 +2,7 @@
 
 ### All-in-One ComfyUI Workflow for MiniMax H3
 
-**REF2VA / T2VA / I2V / FLF2VA | 7-Clip Generation | Part Continuation | Face Refine | Latent Upscale | Audio Refine**
+**REF2VA / T2VA / I2VA / FLF2VA | 7-Clip Generation | Part Continuation | Face Refine | Latent Upscale | Audio Refine**
 
 MiniMax H3の4つの動画生成方式を統合した、ComfyUI用オールインワン・ワークフローです。
 
@@ -19,7 +19,7 @@ MiniMax H3の4つの動画生成方式を統合した、ComfyUI用オールイ�
 - **4つの生成方式を自動切替**
   - REF2VA — Reference to Video + Audio
   - T2VA — Text to Video + Audio
-  - I2V（I2VA）— Image to Video + Audio
+  - I2VA— Image to Video + Audio
   - FLF2VA — First / Last Frame to Video + Audio
 
 - **最大7Clip連続生成**
@@ -30,7 +30,7 @@ MiniMax H3の4つの動画生成方式を統合した、ComfyUI用オールイ�
 - **Part Continuation**
   - NEW / CONTINUEの切替
   - MP4 TailとNative AV LatentによるMotion Context引き継ぎ
-  - 複数Partを連結した長尺動画制作
+  - Partを分けた長尺動画制作（REF2VA / T2VA / I2VAはPart別MP4、FLF2VAは実験的な累積MP4出力）
 
 - **H3 Scene Editor**
   - 各Clipのプロンプト・参照画像・動画尺を管理
@@ -99,6 +99,8 @@ Repository: [kijai/ComfyUI-KJNodes](https://github.com/kijai/ComfyUI-KJNodes)
 
 Set/GetノードやAttention関連の処理に使用します。
 
+**ComfyUI_Nvidia_VFX_Nodes** もComfyUI Managerから導入できます。環境によりインストールに失敗する場合は、次の手動手順を使用してください。
+
 ### ② Git cloneで手動インストール
 
 ### Windows / venv環境での準備（最初に1回だけ）
@@ -125,7 +127,7 @@ git clone https://github.com/Comfy-Org/ComfyUI_Nvidia_VFX_Nodes.git
 python -m pip install -r ComfyUI_Nvidia_VFX_Nodes\requirements.txt
 ```
 
-RTX Video Super Resolutionによる動画のアップスケールに使用します。NVIDIA RTX GPUが必要です。現在ComfyUI Managerでインストールエラーが発生するため、手動で導入します。
+RTX Video Super Resolutionによる動画のアップスケールに使用します。NVIDIA RTX GPUが必要です。ComfyUI Managerからも導入可能ですが、インストールエラーが発生する環境では上記の手動インストールを使用してください。公式READMEではCUDA対応PyTorch（cu130以降）が必要とされています。
 
 #### ComfyUI-MiniMax-H3-Integrated
 
@@ -277,7 +279,7 @@ face_yolov8m.pt
 |---|---|
 | REF2VA | 参照画像・動画・音声を使用 |
 | T2VA | テキストから映像と音声を生成 |
-| I2V（I2VA） | 開始画像を指定 |
+| I2VA | 開始画像を指定 |
 | FLF2VA | 開始画像・終了画像を指定 |
 
 Conditioningはワークフロー内部で自動切替されます。
@@ -287,102 +289,91 @@ Conditioningはワークフロー内部で自動切替されます。
 ---
 
 ## 6. 基本操作 / How to Use
-### H3 Scene Editorの起動方法
 
-ComfyUIを起動した状態で、Webブラウザから以下のURLにアクセスしてください。
+### 初回：H3 Scene EditorとScene Project Pathの設定
 
-**H3 Scene Editor：**
+1. ComfyUIを起動し、ブラウザで **http://127.0.0.1:8188/h3-scene-editor** を開きます（ポート番号が異なる場合は変更）。
+2. `新規プロジェクト名` に `Project01` などの名前を入力し、**「新規作成」** をクリックします。
+3. Scene Editor上部に表示された `H3_Scene_Projects/Project01/scenes.json` 形式のパスを **「コピー」** します。
+4. ComfyUI側の `SCENE PROJECT PATH — MASTER CONTROL` 内、`SCENE PROJECT JSON PATH — Edit Here` に貼り付けます。Clip1〜7など関連ノードへ自動反映されるため、個別設定は不要です。
+5. Generation Mode、Clip1〜7のDuration・参照素材・Promptを設定し、**「全Clipを保存」** をクリックします。
 
-http://127.0.0.1:8188/h3-scene-editor
+2回目以降は、Scene Editorで対象プロジェクトを選択して **「読み込み」** し、編集後に **「全Clipを保存」** します。プロジェクトを切り替えた場合は、ComfyUI側のScene Project Pathも更新してください。
 
-H3 Scene Editorでは、生成方式（REF2VA / T2VA / I2V / FLF2VA）の選択、各Clipの動画尺、参照画像、プロンプトを設定できます。
+**既知の注意：** プロジェクトを新規作成・切替した直後などに以前のDurationが残ることがあります。`Total Part Duration Out` と `H3 Auto Duration Report` が正しく更新されない場合は、ComfyUIを再起動して確認してください。
 
-設定後は、必ず **「全Clipを保存」** を押してからComfyUIで動画生成を実行してください。
+### Part1 — NEW（新規生成）
 
-※ `8188` はComfyUIの標準的なポート番号です。異なるポートで起動している場合は、URLのポート番号を変更してください。Scene Editorが表示されない場合は、統合カスタムノードの導入とComfyUIの起動ログを確認してください。
+1. Scene EditorでPart1の設定を作成し、**「全Clipを保存」** をクリックします。
+2. ComfyUIの `Resolution Selector (Size)` で解像度・アスペクト比を設定します（`multiple` は通常32）。
+3. `PART MODE` を **Part1 NEW** に設定します。
+4. `Use Clip Total` に使用Clip数（1〜7）を指定します。
+5. `PART CONTINUITY — MP4 & AV Latent Management` の `Current Part Slot` を **1** に設定します。
+6. `Total Part Duration Out` と `H3 Auto Duration Report` で動画尺を確認し、生成します。
+7. 完成MP4と `last_clip_00001.safetensors` の保存を確認します。
 
-### Part1 — NEW（最初のPart）
+Part1 NEWでは前PartのMP4・AV Latentは使用しません。最初は短い1Clipで動作確認すると状況を把握しやすくなります。
 
-**H3 Scene Editor**
+### Part2 — CONTINUE（継続生成）
 
-1. `H3 Scene Editor` を開きます。
-2. Generation Modeを選択します。
-3. 各ClipのDuration・参照画像・Promptを設定します。
-4. **「全Clipを保存」** を押します。
-
-**ComfyUI**
-
-1. `Resolution Selector (Size)` でアスペクト比と解像度を設定します。`multiple` は通常32を使用します。
-2. `Part Mode` を **NEW** に設定します。
-3. `Use Clip Total` で使用するClip数（1～7）を指定します。
-4. モデルの選択・参照画像の指定が正しいことを確認し、動画生成を実行します。
-5. 完成MP4とNative AV Latentが保存されたことを確認します。
-
-**最初は1Clipの短い動画で動作確認するのがおすすめです。** 問題がなければ2Clip以上に増やしてください。
-
-### Part2 — CONTINUE
-
-**H3 Scene Editor**
-
-1. Part2の各Clip設定を作成します。
-2. **「全Clipを保存」** を押します。
-
-**ComfyUI**
-
-1. `Part Mode` を **CONTINUE** に変更します。
-2. `Use Clip Total` で使用するClip数を指定します。
-3. `PART2 INPUT — Load Part1 MP4 Tail` にPart1の完成MP4を指定します。
-4. `PART CONTEXT — Load latest AV Latent` がPart1のNative AV Latentを参照していることを確認します。
-5. 動画生成を実行します。
+1. Scene EditorでPart2のClip設定を更新し、**「全Clipを保存」** します。
+2. ComfyUIの `PART MODE` を **Part2+ CONTINUE** にします。
+3. `Use Clip Total` に今回のClip数を指定します。
+4. `Current Part Slot` を **2** にします。
+5. `PART INPUT — Previous Cumulative MP4 Tail (22f)` の `video_path` に、Part1の完成MP4を指定します。
+6. `tail_frames` は通常 **22** のまま使用します。
+7. 動画尺を確認して実行します。AV Latentは `last_clip_00001.safetensors` を読み込み、`last_clip_00002.safetensors` に保存する構成です。
 
 ### Part3以降 — CONTINUE
 
-Part2と同じ操作を繰り返します。**解像度はPart1と同じ設定を引き継ぎます。**
+Part2と同様に、Scene Editorで今回のClipを保存し、`PART MODE = Part2+ CONTINUE` のまま `Current Part Slot` を今回のPart番号に設定します。`video_path` は直前のPartで出力したMP4を指定し、動画尺を確認して生成します。解像度などの生成条件は原則として先行Partと揃えてください。
 
-MP4 Tailには**直前のPartの完成MP4**を指定してください。
+| Part | Current Part Slot | 読み込むAV Latent | 保存するAV Latent |
+|---|---:|---|---|
+| Part1（NEW） | 1 | 使用しない | `last_clip_00001.safetensors` |
+| Part2 | 2 | `last_clip_00001.safetensors` | `last_clip_00002.safetensors` |
+| Part3 | 3 | `last_clip_00002.safetensors` | `last_clip_00003.safetensors` |
+| Part4 | 4 | `last_clip_00003.safetensors` | `last_clip_00004.safetensors` |
 
-Part3以降も、同じPart継続用入力ノードを使用します。
+※ `Use Clip Total` は1Part内のClip数、`Current Part Slot` はPart番号です。**MP4とNative AV Latentは、必ず同じ前Part・同じ生成回のものを使用してください。**
+
+### Partの動画出力方式
+
+- **REF2VA / T2VA / I2VA：** PartごとにMP4を個別出力します。最終的には動画編集ソフトなどで順番に結合できます。
+- **FLF2VA：** Part1は単独MP4、Part2以降は直前までの内容を含む**累積MP4**を出力します。CONTINUEの `video_path` には直前の累積MP4を指定します。累積MP4同士を再結合すると映像・音声が重複します。
+
+**FLF2VAのPart間結合は実験的機能です。** 22フレームの重複処理、4msのAudio Boundary Smoothingを使用しますが、映像・音声が常に完全に滑らかにつながることを保証するものではありません。
 
 ---
 
 ## 7. Motion Context / Part Continuation
 
-Part継続では、前Partの映像と音声の情報を引き継ぎます。
+CONTINUEでは、前PartのMP4末尾映像とNative AV LatentをMotion Contextとして使用します。
 
-主に以下の情報を利用します。
+- `PART INPUT — Previous Cumulative MP4 Tail (22f)` の `video_path`：前PartのMP4
+- `tail_frames`：**22**（24fpsで約0.92秒）
+- `PART CONTEXT — Load AV Latent (previous Part slot)`：前Partの番号のAV Latentを読み込み
+- `PART CONTEXT — Save AV Latent (current Part slot)`：今回の番号のAV Latentを保存
 
-- 前Partの完成MP4の末尾フレーム
-- 前Partから保存されたNative AV Latent
-
-**MP4 Tail推奨値**
-
-```text
-tail_frames = 22
-```
-
-24fpsで約0.92秒に相当します。
-
-この値を変更すると、Part間の映像の連続性や最終動画尺、音声同期に影響する可能性があります。通常は22のまま使用してください。
-
-**Native AV Latentについて**
-
-保存先：
+AV Latentの保存先：
 
 ```text
-h3_part_context/integrated_parts/last_clip
+ComfyUI/output/h3_part_context/integrated_parts/
 ```
 
-読み込みフォルダ：
+ファイル名の例：
 
 ```text
-h3_part_context/integrated_parts
+last_clip_00001.safetensors
+last_clip_00002.safetensors
+last_clip_00003.safetensors
 ```
 
-通常、CONTINUEでは指定フォルダ内の最新AV Latentを読み込みます。
+`Current Part Slot` から前Part番号が自動計算されるため、Load / Saveノードの番号を個別に変更する必要はありません。**フォルダ内の最新ファイルを自動選択する方式ではありません。**
 
-**重要：MP4とNative AV Latentは、同じPart・同じ生成回のものを使用してください。**
+同じPart番号で再生成すると、その番号のAV Latentは上書きされます。AV Latentの保存フォルダはScene Editorのプロジェクト名に自動連動しません。別プロジェクトの同じ番号のファイルを上書きしないよう、必要なMP4・AV Latentは別途保管してください。
 
-同じフォルダで別プロジェクトを生成したり、過去のPartを再生成した場合、意図しないAV Latentを読み込む可能性があります。
+また、MP4とAV Latentが同じ生成結果に属するかを自動照合する機能はありません。`tail_frames` を変更すると連続性・最終尺・音声同期に影響する可能性があるため、通常は22のまま使用してください。
 
 ---
 
@@ -471,10 +462,13 @@ MiniMax H3 Pass1（映像＋音声）
 - ComfyUIと必要なカスタムノードを導入してからワークフローを読み込んでください。
 - JSON内で指定されているモデル名やファイルパスは、使用環境に合わせて変更してください。
 - Scene Editorの設定変更後は、必ず「全Clipを保存」を押してください。
+- プロジェクトを切り替えた場合は `SCENE PROJECT JSON PATH — Edit Here` のパスも切り替えてください。
+- `Total Part Duration Out` と `H3 Auto Duration Report` が設定尺と一致することを確認してから実行してください。
 - 最大7Clipの連続生成に対応していますが、VRAM容量や生成設定によって処理時間は変わります。
 - REF2VAでは参照画像とプロンプトの整合性が再現結果に影響することがあります。
 - BGMなど生成音声の品質は、プロンプトや生成条件によって変化します。
 - Motion Contextによる連続性の維持は、すべての生成結果で完全なシームレス性を保証するものではありません。
+- FLF2VAの累積MP4出力は実験的機能です。累積MP4同士を再結合しないでください。
 - 新しい統合カスタムノードを導入した環境では、Missing NodeやImport Failedがないことを確認してください。
 
 ---
