@@ -12,6 +12,16 @@ MiniMax H3の4つの動画生成方式を統合した、ComfyUI用オールイ�
 
 ![MiniMax H3 All-in-One Video Studio](workflow.png)
 
+
+### 🎬 Video Tutorial / 動画解説
+
+Watch the YouTube tutorial for a walkthrough of the MiniMax H3 – All-in-One Video Studio workflow, including installation, Scene Editor setup, and video generation.
+
+日本語による導入方法・Scene Editorの操作・動画生成の解説はこちら。
+
+▶ **[Watch the YouTube Tutorial](https://youtu.be/9tH4x6bCYJU)**
+
+*The video is narrated in Japanese, but English auto-dubbing and subtitles are available.*
 ---
 
 ## 主な特徴 / Features
